@@ -1,0 +1,353 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Complete - {{ category.name }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial Black', Arial, sans-serif;
+            background: #E74C3C;
+            min-height: 100vh;
+            padding: 20px;
+            color: white;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .category-header {
+            background: rgba(255, 255, 255, 0.9);
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 30px;
+            border-radius: 50px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            color: #2C3E50;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .category-icon {
+            font-size: 2rem;
+        }
+
+        .main-card {
+            background: #2C3E50;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+            margin-bottom: 10px;
+        }
+
+        .game-title {
+            background: #2C3E50;
+            color: white;
+            text-align: center;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .game-title img {
+            max-width: 300px;
+            height: auto;
+            filter: brightness(0) invert(1);
+        }
+
+        .results-container {
+            background: white;
+            padding: 40px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+        }
+
+        .question-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .question-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #E74C3C;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .result-bars {
+            display: flex;
+            height: 100px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+        }
+
+        .result-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #2C3E50;
+            font-weight: bold;
+            font-size: 1rem;
+            position: relative;
+            transition: all 0.3s ease;
+            flex-direction: column;
+            padding: 10px;
+            gap: 5px;
+        }
+
+        .result-bar-a {
+            background: #AED6F1;
+        }
+
+        .result-bar-b {
+            background: #F7DC6F;
+        }
+
+        .option-name {
+            font-size: 0.9rem;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        .percentage {
+            font-size: 1.4rem;
+            font-weight: 900;
+        }
+
+        .badges {
+            display: flex;
+            gap: 5px;
+            margin-top: 5px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .winner-badge {
+            background: #27AE60;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .chosen-badge {
+            background: #3498DB;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .vote-details {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .actions {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .btn {
+            background: #F7DC6F;
+            color: #2C3E50;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            margin: 0 10px;
+        }
+
+        .btn:hover {
+            background: #F4D03F;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .results-container {
+                grid-template-columns: 1fr;
+                padding: 25px;
+                gap: 25px;
+            }
+
+            .question-card {
+                padding: 20px;
+            }
+
+            .result-bars {
+                height: 70px;
+            }
+
+            .category-header {
+                padding: 10px 20px;
+                font-size: 1.2rem;
+                gap: 10px;
+            }
+
+            .category-icon {
+                font-size: 1.5rem;
+            }
+
+            .game-title img {
+                max-width: 200px;
+            }
+
+            .btn {
+                display: block;
+                margin: 10px auto;
+                max-width: 250px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .results-container {
+                padding: 20px;
+            }
+
+            .question-card {
+                padding: 15px;
+            }
+
+            .result-bars {
+                height: 100px;
+                flex-direction: column;
+            }
+
+            .result-bar {
+                height: 50px;
+                justify-content: center;
+                flex-direction: row;
+                padding: 10px;
+                gap: 10px;
+            }
+
+            .option-name {
+                font-size: 0.8rem;
+            }
+
+            .percentage {
+                font-size: 1.2rem;
+            }
+
+            .badges {
+                margin-top: 0;
+                gap: 3px;
+            }
+
+            .winner-badge, .chosen-badge {
+                font-size: 0.7rem;
+                padding: 2px 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="category-header">
+                <span>Category : {{ category.name }}</span>
+                <span class="category-icon">{{ category.icon }}</span>
+            </div>
+        </div>
+
+        <div class="main-card">
+            <div class="game-title">
+                <img src="{% static 'polls/images/report.png' %}" alt="This or That">
+            </div>
+            
+            <div class="results-container">
+                {% for question in questions_with_results %}
+                <div class="question-card">
+                    <div class="question-title">{{ question.option_a }} vs {{ question.option_b }}</div>
+                    
+                    <div class="result-bars">
+                        <div class="result-bar result-bar-a" style="flex: {{ question.percentage_a|default:1 }};">
+                            <div class="option-name">{{ question.option_a }}</div>
+                            <div class="percentage">{{ question.percentage_a }}%</div>
+                            <div class="badges">
+                                {% if question.votes_a > question.votes_b %}
+                                    <span class="winner-badge">Winner</span>
+                                {% endif %}
+                                {% if question.user_choice == 'A' %}
+                                    <span class="chosen-badge">Chosen</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="result-bar result-bar-b" style="flex: {{ question.percentage_b|default:1 }};">
+                            <div class="option-name">{{ question.option_b }}</div>
+                            <div class="percentage">{{ question.percentage_b }}%</div>
+                            <div class="badges">
+                                {% if question.votes_b > question.votes_a %}
+                                    <span class="winner-badge">Winner</span>
+                                {% endif %}
+                                {% if question.user_choice == 'B' %}
+                                    <span class="chosen-badge">Chosen</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="vote-details">
+                        <span>{{ question.votes_a }} votes</span>
+                        <span>{{ question.total_votes }} total votes</span>
+                        <span>{{ question.votes_b }} votes</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="actions">
+            <a href="{% url 'polls:this_or_that' category.id %}?reset=true" class="btn">Play Again</a>
+            <a href="{% url 'polls:this_or_that_home' %}" class="btn btn-secondary">Return to menu</a>
+        </div>
+    </div>
+</body>
+</html>

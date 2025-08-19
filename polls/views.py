@@ -13,6 +13,9 @@ from django.contrib.auth.models import User
 from .models import Questions, Choice, ThisOrThat, ThisOrThatCategory, Vote
 from django.urls import reverse
 from django.views import generic
+from django.db.models import Avg
+from django.contrib.auth.decorators import login_required
+
 class IndexView(generic.ListView):
     template_name = "polls/index.html"
     context_object_name = "latest_question_list"
@@ -71,46 +74,28 @@ def this_or_that_game(request, category_id):
     """Main game interface"""
     category = get_object_or_404(ThisOrThatCategory, id=category_id, is_active=True)
     
-    # Get a random question from this category that user hasn't voted on
-    voted_questions = []
-    if request.user.is_authenticated:
-        voted_questions = Vote.objects.filter(
-            user=request.user,
-            this_or_that__category=category
-        ).values_list('this_or_that_id', flat=True)
-    elif request.session.session_key:
-        voted_questions = Vote.objects.filter(
-            session_key=request.session.session_key,
-            this_or_that__category=category
-        ).values_list('this_or_that_id', flat=True)
-    
+    # Just get all available questions (don't exclude voted ones)
     available_questions = ThisOrThat.objects.filter(
         category=category,
         is_active=True
-    ).exclude(id__in=voted_questions)
+    )
     
     if not available_questions.exists():
-        # User has voted on all questions in this category
         return render(request, 'polls/category_complete.html', {
             'category': category
         })
     
     question = random.choice(available_questions)
     
-    # Calculate progress
-    total_questions = ThisOrThat.objects.filter(
-        category=category, is_active=True
-    ).count()
-    answered_questions = len(voted_questions)
-    current_question = answered_questions + 1
-    progress_percentage = (answered_questions / total_questions) * 100
+    # Calculate progress based on total questions
+    total_questions = available_questions.count()
     
     return render(request, 'polls/this_or_that.html', {
         'question': question,
         'category': category,
-        'current_question': current_question,
+        'current_question': 1,  # Since they can revote, this is always "current"
         'total_questions': total_questions,
-        'progress_percentage': progress_percentage
+        'progress_percentage': 0  # Or calculate based on some other metric
     })
 
 @require_POST
@@ -125,7 +110,7 @@ def vote_this_or_that(request, question_id):
         if choice not in ['A', 'B']:
             return JsonResponse({'error': 'Invalid choice'}, status=400)
         
-        # Create vote record
+        # Create vote data
         vote_data = {
             'this_or_that': question,
             'choice': choice,
@@ -135,25 +120,40 @@ def vote_this_or_that(request, question_id):
         
         if request.user.is_authenticated:
             vote_data['user'] = request.user
+            # Check for existing vote by this user
+            existing_vote = Vote.objects.filter(
+                this_or_that=question,
+                user=request.user
+            ).first()
         else:
             if not request.session.session_key:
                 request.session.create()
             vote_data['session_key'] = request.session.session_key
+            # Check for existing vote by this session
+            existing_vote = Vote.objects.filter(
+                this_or_that=question,
+                session_key=request.session.session_key
+            ).first()
         
-        # Check if user/session already voted
-        existing_vote = Vote.objects.filter(
-            this_or_that=question,
-            user=vote_data.get('user'),
-            session_key=vote_data.get('session_key')
-        ).first()
-        
+        # Handle existing vote
         if existing_vote:
-            return JsonResponse({'error': 'Already voted'}, status=400)
+            # Decrement the old choice count
+            if existing_vote.choice == 'A':
+                ThisOrThat.objects.filter(id=question_id).update(votes_a=F('votes_a') - 1)
+            else:
+                ThisOrThat.objects.filter(id=question_id).update(votes_b=F('votes_b') - 1)
+            
+            # Update the existing vote
+            existing_vote.choice = choice
+            existing_vote.timestamp = timezone.now()
+            existing_vote.user_agent = vote_data['user_agent']
+            existing_vote.ip_address = vote_data['ip_address']
+            existing_vote.save()
+        else:
+            # Create new vote
+            Vote.objects.create(**vote_data)
         
-        # Create vote
-        Vote.objects.create(**vote_data)
-        
-        # Update question vote counts using F() to prevent race conditions
+        # Increment the new choice count
         if choice == 'A':
             ThisOrThat.objects.filter(id=question_id).update(votes_a=F('votes_a') + 1)
         else:
@@ -363,3 +363,212 @@ def export_analytics(request):
         ])
     
     return response
+
+def this_or_that_game(request, category_id):
+    """Main game interface with proper progress tracking"""
+    category = get_object_or_404(ThisOrThatCategory, id=category_id, is_active=True)
+    
+    # Check if user wants to reset/play again
+    reset = request.GET.get('reset')
+    
+    if reset:
+        # Clear user's previous votes for this category
+        if request.user.is_authenticated:
+            Vote.objects.filter(
+                user=request.user,
+                this_or_that__category=category
+            ).delete()
+        elif request.session.session_key:
+            Vote.objects.filter(
+                session_key=request.session.session_key,
+                this_or_that__category=category
+            ).delete()
+        
+        # Redirect to start fresh (without reset parameter)
+        return redirect('polls:this_or_that', category_id=category_id)
+    
+    # Get all questions for this category
+    all_questions = ThisOrThat.objects.filter(category=category, is_active=True)
+    
+    if not all_questions.exists():
+        return render(request, 'polls/category_complete.html', {
+            'category': category
+        })
+    
+    # Get questions user has voted on
+    voted_questions = []
+    if request.user.is_authenticated:
+        voted_questions = Vote.objects.filter(
+            user=request.user,
+            this_or_that__category=category
+        ).values_list('this_or_that_id', flat=True)
+    elif request.session.session_key:
+        voted_questions = Vote.objects.filter(
+            session_key=request.session.session_key,
+            this_or_that__category=category
+        ).values_list('this_or_that_id', flat=True)
+    
+    # Get remaining questions
+    remaining_questions = all_questions.exclude(id__in=voted_questions)
+    
+    # If no remaining questions, redirect to summary
+    if not remaining_questions.exists():
+        return redirect('polls:quiz_summary', category_id=category_id)
+    
+    # Get next question (random from remaining)
+    question = random.choice(remaining_questions)
+    
+    # Calculate progress
+    total_questions = all_questions.count()
+    answered_questions = len(voted_questions)
+    progress_percentage = (answered_questions / total_questions) * 100 if total_questions > 0 else 0
+    
+    # Check if there are more questions after this one
+    has_next_question = remaining_questions.count() > 1
+    
+    return render(request, 'polls/this_or_that.html', {
+        'question': question,
+        'category': category,
+        'current_question': answered_questions + 1,
+        'total_questions': total_questions,
+        'progress_percentage': progress_percentage,
+        'has_next_question': has_next_question
+    })
+
+# Add new quiz summary view
+def quiz_summary(request, category_id):
+    """Display quiz completion summary with all results"""
+    category = get_object_or_404(ThisOrThatCategory, id=category_id, is_active=True)
+    
+    # Get all questions in this category with their current vote counts
+    questions = ThisOrThat.objects.filter(category=category, is_active=True)
+    
+    # Get user's votes for this category
+    user_votes = {}
+    if request.user.is_authenticated:
+        votes = Vote.objects.filter(
+            user=request.user,
+            this_or_that__category=category
+        ).select_related('this_or_that')
+        user_votes = {vote.this_or_that.id: vote.choice for vote in votes}
+    elif request.session.session_key:
+        votes = Vote.objects.filter(
+            session_key=request.session.session_key,
+            this_or_that__category=category
+        ).select_related('this_or_that')
+        user_votes = {vote.this_or_that.id: vote.choice for vote in votes}
+    
+    # Prepare questions with calculated percentages and user choices
+    questions_with_results = []
+    total_votes = 0
+    
+    for question in questions:
+        total_votes += question.total_votes
+        questions_with_results.append({
+            'option_a': question.option_a,
+            'option_b': question.option_b,
+            'votes_a': question.votes_a,
+            'votes_b': question.votes_b,
+            'total_votes': question.total_votes,
+            'percentage_a': question.percentage_a,
+            'percentage_b': question.percentage_b,
+            'user_choice': user_votes.get(question.id, None),  # Add user's choice
+        })
+    
+    # Calculate summary stats
+    total_questions = questions.count()
+    avg_votes_per_question = (total_votes / total_questions) if total_questions > 0 else 0
+    
+    return render(request, 'polls/quiz_summary.html', {
+        'category': category,
+        'questions_with_results': questions_with_results,
+        'total_questions': total_questions,
+        'total_votes': total_votes,
+        'avg_votes_per_question': avg_votes_per_question,
+    })
+# Update your vote_this_or_that view (keeping the revote logic you wanted)
+@require_POST
+def vote_this_or_that(request, question_id):
+    """Handle voting via AJAX with revote capability"""
+    question = get_object_or_404(ThisOrThat, id=question_id)
+    
+    try:
+        data = json.loads(request.body)
+        choice = data.get('choice')
+        
+        if choice not in ['A', 'B']:
+            return JsonResponse({'error': 'Invalid choice'}, status=400)
+        
+        # Create vote data
+        vote_data = {
+            'this_or_that': question,
+            'choice': choice,
+            'user_agent': request.META.get('HTTP_USER_AGENT', ''),
+            'ip_address': request.META.get('REMOTE_ADDR'),
+        }
+        
+        if request.user.is_authenticated:
+            vote_data['user'] = request.user
+            # Check for existing vote by this user
+            existing_vote = Vote.objects.filter(
+                this_or_that=question,
+                user=request.user
+            ).first()
+        else:
+            if not request.session.session_key:
+                request.session.create()
+            vote_data['session_key'] = request.session.session_key
+            # Check for existing vote by this session
+            existing_vote = Vote.objects.filter(
+                this_or_that=question,
+                session_key=request.session.session_key
+            ).first()
+        
+        # Handle existing vote (revote logic)
+        if existing_vote:
+            # Decrement the old choice count
+            if existing_vote.choice == 'A':
+                ThisOrThat.objects.filter(id=question_id).update(votes_a=F('votes_a') - 1)
+            else:
+                ThisOrThat.objects.filter(id=question_id).update(votes_b=F('votes_b') - 1)
+            
+            # Update the existing vote
+            existing_vote.choice = choice
+            existing_vote.timestamp = timezone.now()
+            existing_vote.user_agent = vote_data['user_agent']
+            existing_vote.ip_address = vote_data['ip_address']
+            existing_vote.save()
+        else:
+            # Create new vote
+            Vote.objects.create(**vote_data)
+        
+        # Increment the new choice count
+        if choice == 'A':
+            ThisOrThat.objects.filter(id=question_id).update(votes_a=F('votes_a') + 1)
+        else:
+            ThisOrThat.objects.filter(id=question_id).update(votes_b=F('votes_b') + 1)
+        
+        # Get updated results
+        question.refresh_from_db()
+        
+        return JsonResponse({
+            'success': True,
+            'votes_a': question.votes_a,
+            'votes_b': question.votes_b,
+            'total_votes': question.total_votes,
+            'percentage_a': question.percentage_a,
+            'percentage_b': question.percentage_b,
+            'winning_option': question.winning_option
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+# Restrict analytics to admin only
+@staff_member_required
+def analytics_dashboard(request):
+    """Analytics dashboard for admins only"""
+    # Your existing analytics code here...
+    pass

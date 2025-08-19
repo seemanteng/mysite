@@ -26,7 +26,6 @@ class ThisOrThatCategoryAdmin(admin.ModelAdmin):
     list_display = ['name', 'icon', 'question_count', 'total_votes', 'is_active', 'created_at']
     list_filter = ['is_active', 'created_at']
     search_fields = ['name', 'description']
-    prepopulated_fields = {'name': ('name',)}
     
     def question_count(self, obj):
         count = obj.thisorthat_set.filter(is_active=True).count()

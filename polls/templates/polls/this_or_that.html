@@ -13,83 +13,114 @@
         }
 
         body {
-            font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Arial Black', Arial, sans-serif;
+            background: #E74C3C;
             min-height: 100vh;
             display: flex;
-            align-items: center;
-            justify-content: center;
+            flex-direction: column;
             overflow-x: hidden;
         }
 
-        .container {
-            max-width: 600px;
-            width: 90%;
-            padding: 20px;
-        }
-
         .header {
+            padding: 20px;
             text-align: center;
+        }
+
+        .category-header {
+            background: rgba(255, 255, 255, 0.9);
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 30px;
+            border-radius: 50px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .category-icon {
+            font-size: 2rem;
+        }
+
+        .category-name {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #2C3E50;
+        }
+
+        .progress-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
             color: white;
-            margin-bottom: 30px;
-        }
-
-        .category-badge {
-            display: inline-block;
-            background: rgba(255, 255, 255, 0.2);
-            padding: 10px 20px;
-            border-radius: 25px;
+            font-size: 0.9rem;
             margin-bottom: 10px;
-            font-size: 18px;
         }
 
-        .question-counter {
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 14px;
+        .progress-text {
+            text-align: left;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #3498DB;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .game-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 1000px;
+            margin: 0 auto;
+            width: 100%;
+            padding: 0 20px;
         }
 
         .game-card {
-            background: white;
-            border-radius: 20px;
+            background: #2C3E50;
+            border-radius: 25px;
             overflow: hidden;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
             position: relative;
-            transform-style: preserve-3d;
-            transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        .game-card.flip {
-            transform: rotateY(180deg);
-        }
-
-        .card-content {
-            padding: 0;
-            backface-visibility: hidden;
-        }
-
-        .vs-section {
+        .game-title {
+            background: #2C3E50;
+            color: white;
             text-align: center;
             padding: 20px;
-            background: #f8f9fa;
-            border-bottom: 3px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .vs-text {
-            font-size: 24px;
-            font-weight: bold;
-            color: #6c757d;
-            letter-spacing: 3px;
+        .game-title img {
+            max-width: 300px;
+            height: auto;
+            filter: brightness(0) invert(1);
         }
 
         .options-container {
             display: flex;
-            height: 300px;
+            min-height: 400px;
+            position: relative;
         }
 
         .option {
             flex: 1;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
             cursor: pointer;
@@ -99,53 +130,42 @@
         }
 
         .option-a {
-            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
-            color: white;
+            background: #F7DC6F;
+            color: #2C3E50;
         }
 
         .option-b {
-            background: linear-gradient(135deg, #4834d4, #686de0);
-            color: white;
+            background: #AED6F1;
+            color: #2C3E50;
         }
 
         .option:hover {
-            transform: scale(1.05);
-            z-index: 2;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            transform: scale(1.02);
+            filter: brightness(1.1);
+        }
+
+        .option.disabled {
+            pointer-events: none;
+            opacity: 0.7;
         }
 
         .option-text {
-            font-size: 22px;
-            font-weight: bold;
+            font-size: 3rem;
+            font-weight: 900;
             text-align: center;
-            padding: 20px;
+            padding: 40px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
             z-index: 2;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            position: relative;
         }
 
         .option-image {
-            width: 80px;
-            height: 80px;
+            width: 100px;
+            height: 100px;
             border-radius: 50%;
             object-fit: cover;
-            margin-bottom: 15px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-        }
-
-        .ripple {
-            position: absolute;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.6);
-            transform: scale(0);
-            animation: ripple-animation 0.6s linear;
-            pointer-events: none;
-        }
-
-        @keyframes ripple-animation {
-            to {
-                transform: scale(4);
-                opacity: 0;
-            }
+            margin-bottom: 20px;
+            border: 4px solid rgba(0,0,0,0.1);
         }
 
         .results-overlay {
@@ -154,139 +174,181 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(255, 255, 255, 0.95);
             display: none;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            backdrop-filter: blur(10px);
             z-index: 10;
         }
 
-        .results-content {
+        .results-container {
+            display: flex;
+            height: 100%;
+        }
+
+        .result-section {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: #2C3E50;
+            font-weight: bold;
+            position: relative;
+            transition: all 0.5s ease;
+        }
+
+        .result-section-a {
+            background: #AED6F1;
+        }
+
+        .result-section-b {
+            background: #F7DC6F;
+        }
+
+        .result-percentage {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .result-option {
+            font-size: 1.5rem;
             text-align: center;
-            padding: 20px;
         }
 
-        .result-bar {
-            width: 200px;
-            height: 10px;
-            background: #e9ecef;
-            border-radius: 5px;
-            margin: 10px auto;
-            overflow: hidden;
+        .result-vs {
+            font-size: 1.2rem;
+            margin: 0 10px;
         }
 
-        .result-fill-a {
-            height: 100%;
-            background: #ff6b6b;
-            border-radius: 5px;
-            transition: width 1s ease;
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: none;
+            gap: 15px;
         }
 
-        .result-fill-b {
-            height: 100%;
-            background: #4834d4;
-            border-radius: 5px;
-            transition: width 1s ease;
-            margin-top: -10px;
-        }
-
-        .next-btn {
-            background: linear-gradient(135deg, #00d2ff, #3a7bd5);
+        .btn {
+            background: #E74C3C;
             color: white;
             border: none;
-            padding: 15px 30px;
+            padding: 12px 25px;
             border-radius: 25px;
-            font-size: 16px;
+            font-size: 1rem;
             font-weight: bold;
             cursor: pointer;
-            margin-top: 20px;
-            transition: transform 0.2s;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
         }
 
-        .next-btn:hover {
+        .btn:hover {
+            background: #C0392B;
             transform: translateY(-2px);
         }
 
-        .progress-bar {
-            width: 100%;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.3);
-            margin-bottom: 20px;
-            border-radius: 2px;
-            overflow: hidden;
+        .btn-secondary {
+            background: #95A5A6;
         }
 
-        .progress-fill {
-            height: 100%;
-            background: white;
-            border-radius: 2px;
-            transition: width 0.3s ease;
+        .btn-secondary:hover {
+            background: #7F8C8D;
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .options-container {
+                flex-direction: column;
+                min-height: 500px;
+            }
+
+            .option-text {
+                font-size: 2rem;
+                padding: 30px 20px;
+            }
+
+            .game-title img {
+                max-width: 200px;
+            }
+
+            .result-percentage {
+                font-size: 1.5rem;
+            }
+
+            .result-option {
+                font-size: 1.2rem;
+            }
         }
 
         @media (max-width: 480px) {
-            .options-container {
-                flex-direction: column;
-                height: auto;
-            }
-            
-            .option {
-                min-height: 150px;
-            }
-            
             .option-text {
-                font-size: 18px;
+                font-size: 1.5rem;
+                padding: 20px 15px;
+            }
+
+            .category-header {
+                padding: 10px 20px;
+                gap: 10px;
+            }
+
+            .category-name {
+                font-size: 1.4rem;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
+    <div class="header">
+        <div class="category-header">
+            <span class="category-icon">{{ category.icon }}</span>
+            <span class="category-name">{{ category.name }}</span>
+        </div>
+        
+        <div class="progress-container">
+            <div class="progress-text">Progress Bar:</div>
             <div class="progress-bar">
                 <div class="progress-fill" style="width: {{ progress_percentage }}%"></div>
             </div>
-            <div class="category-badge">{{ category.icon }} {{ category.name }}</div>
-            <div class="question-counter">Question {{ current_question }} of {{ total_questions }}</div>
         </div>
+    </div>
 
+    <div class="game-container">
         <div class="game-card" id="gameCard">
-            <div class="card-content">
-                <div class="vs-section">
-                    <div class="vs-text">THIS OR THAT?</div>
+            <div class="game-title">
+                <img src="{% static 'polls/images/yellow.png' %}" alt="This or That">
+            </div>
+            
+            <div class="options-container">
+                <div class="option option-a" onclick="vote('A')" id="optionA">
+                    {% if question.option_a_image %}
+                        <img src="{{ question.option_a_image }}" alt="{{ question.option_a }}" class="option-image">
+                    {% endif %}
+                    <div class="option-text">{{ question.option_a }}</div>
                 </div>
                 
-                <div class="options-container">
-                    <div class="option option-a" onclick="vote('A')" id="optionA">
-                        {% if question.option_a_image %}
-                            <img src="{{ question.option_a_image }}" alt="{{ question.option_a }}" class="option-image">
-                        {% endif %}
-                        <div class="option-text">{{ question.option_a }}</div>
-                    </div>
-                    
-                    <div class="option option-b" onclick="vote('B')" id="optionB">
-                        {% if question.option_b_image %}
-                            <img src="{{ question.option_b_image }}" alt="{{ question.option_b }}" class="option-image">
-                        {% endif %}
-                        <div class="option-text">{{ question.option_b }}</div>
-                    </div>
+                <div class="option option-b" onclick="vote('B')" id="optionB">
+                    {% if question.option_b_image %}
+                        <img src="{{ question.option_b_image }}" alt="{{ question.option_b }}" class="option-image">
+                    {% endif %}
+                    <div class="option-text">{{ question.option_b }}</div>
                 </div>
 
                 <div class="results-overlay" id="resultsOverlay">
-                    <div class="results-content">
-                        <h3>Results</h3>
-                        <div class="result-bar">
-                            <div class="result-fill-a" id="resultA" style="width: 0%"></div>
+                    <div class="results-container">
+                        <div class="result-section result-section-a" id="resultSectionA">
+                            <div class="result-percentage" id="percentA">0%</div>
+                            <div class="result-option">{{ question.option_a }}</div>
                         </div>
-                        <div style="display: flex; justify-content: space-between; width: 200px; margin: 5px auto;">
-                            <span style="color: #ff6b6b; font-weight: bold;">{{ question.option_a }}: <span id="percentA">0</span>%</span>
-                            <span style="color: #4834d4; font-weight: bold;">{{ question.option_b }}: <span id="percentB">0</span>%</span>
+                        <div class="result-section result-section-b" id="resultSectionB">
+                            <div class="result-percentage" id="percentB">0%</div>
+                            <div class="result-option">{{ question.option_b }}</div>
                         </div>
-                        <div style="margin-top: 10px; color: #6c757d;">
-                            Total votes: <span id="totalVotes">0</span>
-                        </div>
-                        <button class="next-btn" onclick="nextQuestion()">Next Question</button>
+                    </div>
+                    <div class="controls" id="controls">
+                        {% if has_next_question %}
+                            <button class="btn" onclick="nextQuestion()">Next Question ▶️</button>
+                        {% else %}
+                            <a href="{% url 'polls:quiz_summary' category.id %}" class="btn">View Results 📊</a>
+                        {% endif %}
+                        <a href="{% url 'polls:this_or_that_home' %}" class="btn btn-secondary">Back to Categories</a>
                     </div>
                 </div>
             </div>
@@ -294,31 +356,10 @@
     </div>
 
     <script>
-        function createRipple(event, element) {
-            const circle = document.createElement('span');
-            const diameter = Math.max(element.clientWidth, element.clientHeight);
-            const radius = diameter / 2;
-
-            circle.style.width = circle.style.height = diameter + 'px';
-            circle.style.left = (event.clientX - element.offsetLeft - radius) + 'px';
-            circle.style.top = (event.clientY - element.offsetTop - radius) + 'px';
-            circle.classList.add('ripple');
-
-            element.appendChild(circle);
-
-            setTimeout(() => {
-                circle.remove();
-            }, 600);
-        }
-
         function vote(choice) {
-            // Add ripple effect
-            const option = choice === 'A' ? document.getElementById('optionA') : document.getElementById('optionB');
-            createRipple(event, option);
-
             // Disable further clicks
-            document.getElementById('optionA').style.pointerEvents = 'none';
-            document.getElementById('optionB').style.pointerEvents = 'none';
+            document.getElementById('optionA').classList.add('disabled');
+            document.getElementById('optionB').classList.add('disabled');
 
             // Send vote to server
             fetch('{% url "polls:vote_this_or_that" question.id %}', {
@@ -331,28 +372,35 @@
             })
             .then(response => response.json())
             .then(data => {
-                // Show results with animation
-                setTimeout(() => {
-                    showResults(data);
-                }, 800);
+                showResults(data);
             })
             .catch(error => {
                 console.error('Error:', error);
                 // Re-enable clicks on error
-                document.getElementById('optionA').style.pointerEvents = 'auto';
-                document.getElementById('optionB').style.pointerEvents = 'auto';
+                document.getElementById('optionA').classList.remove('disabled');
+                document.getElementById('optionB').classList.remove('disabled');
             });
         }
 
         function showResults(data) {
-            document.getElementById('resultsOverlay').style.display = 'flex';
+            const overlay = document.getElementById('resultsOverlay');
+            const sectionA = document.getElementById('resultSectionA');
+            const sectionB = document.getElementById('resultSectionB');
             
-            // Animate the results
+            overlay.style.display = 'block';
+            
+            // Set proportional widths
             setTimeout(() => {
-                document.getElementById('resultA').style.width = data.percentage_a + '%';
-                document.getElementById('percentA').textContent = data.percentage_a;
-                document.getElementById('percentB').textContent = data.percentage_b;
-                document.getElementById('totalVotes').textContent = data.total_votes;
+                sectionA.style.flex = `${data.percentage_a}`;
+                sectionB.style.flex = `${data.percentage_b}`;
+                
+                document.getElementById('percentA').textContent = data.percentage_a + '%';
+                document.getElementById('percentB').textContent = data.percentage_b + '%';
+                
+                // Show controls after animation
+                setTimeout(() => {
+                    document.getElementById('controls').style.display = 'flex';
+                }, 500);
             }, 200);
         }
 
@@ -382,11 +430,11 @@
             const endX = event.changedTouches[0].clientX;
             const diff = startX - endX;
             
-            if (Math.abs(diff) > 50) { // Minimum swipe distance
+            if (Math.abs(diff) > 50) {
                 if (diff > 0) {
-                    vote('B'); // Swipe left = Option B
+                    vote('B');
                 } else {
-                    vote('A'); // Swipe right = Option A
+                    vote('A');
                 }
             }
             

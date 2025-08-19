@@ -96,7 +96,7 @@ class Vote(models.Model):
     
     class Meta:
         # Prevent duplicate votes from same user/session
-        unique_together = ['this_or_that', 'user', 'session_key']
+        pass 
     
     def __str__(self):
         identifier = self.user.username if self.user else f"Session {self.session_key[:8]}"
