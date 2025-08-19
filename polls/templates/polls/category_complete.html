@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Category Complete!</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            color: white;
+            text-align: center;
+        }
+        .container {
+            padding: 40px;
+        }
+        .btn {
+            background: white;
+            color: #667eea;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: bold;
+            margin: 10px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎉 Category Complete!</h1>
+        <p>You've voted on all questions in <strong>{{ category.name }}</strong></p>
+        <p>Thanks for participating!</p>
+        
+        <a href="{% url 'polls:this_or_that_home' %}" class="btn">Try Another Category</a>
+        <a href="{% url 'polls:analytics_dashboard' %}" class="btn">View Results</a>
+    </div>
+</body>
+</html>

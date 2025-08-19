@@ -1,0 +1,527 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>This or That Analytics Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f9fa;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            text-transform: uppercase;
+            font-size: 0.9em;
+            letter-spacing: 1px;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .chart-title {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            color: #343a40;
+            text-align: center;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 400px;
+        }
+
+        .filters {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .filter-group label {
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.9em;
+        }
+
+        .filter-group select, .filter-group input {
+            padding: 8px 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .filter-group select:focus, .filter-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .trending-questions {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .trending-header {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 15px 20px;
+            font-weight: bold;
+        }
+
+        .trending-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+
+        .trending-item:hover {
+            background: #f8f9fa;
+        }
+
+        .trending-item:last-child {
+            border-bottom: none;
+        }
+
+        .trending-question {
+            flex: 1;
+        }
+
+        .trending-votes {
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .category-performance {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .performance-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .performance-header {
+            padding: 15px 20px;
+            font-weight: bold;
+            color: white;
+            text-align: center;
+        }
+
+        .performance-body {
+            padding: 20px;
+        }
+
+        .performance-stat {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #f1f3f4;
+        }
+
+        .performance-stat:last-child {
+            border-bottom: none;
+        }
+
+        .export-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        .export-btn:hover {
+            background: #218838;
+        }
+
+        @media (max-width: 768px) {
+            .filters {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .category-performance {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📊 This or That Analytics Dashboard</h1>
+        <p>Real-time trend analysis and user engagement metrics</p>
+    </div>
+
+    <div class="container">
+        <!-- Key Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">{{ total_questions }}</div>
+                <div class="stat-label">Total Questions</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ total_votes }}</div>
+                <div class="stat-label">Total Votes</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ today_votes }}</div>
+                <div class="stat-label">Votes Today</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ active_users }}</div>
+                <div class="stat-label">Active Users</div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+            <div class="filter-group">
+                <label>Time Period</label>
+                <select id="timePeriod" onchange="updateCharts()">
+                    <option value="7">Last 7 days</option>
+                    <option value="30">Last 30 days</option>
+                    <option value="90">Last 90 days</option>
+                    <option value="365">Last year</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Category</label>
+                <select id="category" onchange="updateCharts()">
+                    <option value="all">All Categories</option>
+                    {% for category in categories %}
+                    <option value="{{ category.id }}">{{ category.icon }} {{ category.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Date Range</label>
+                <input type="date" id="startDate" onchange="updateCharts()">
+                <input type="date" id="endDate" onchange="updateCharts()">
+            </div>
+            <button class="export-btn" onclick="exportData()">📊 Export Data</button>
+        </div>
+
+        <!-- Charts -->
+        <div class="chart-container">
+            <div class="chart-title">📈 Voting Activity Over Time</div>
+            <div class="chart-wrapper">
+                <canvas id="activityChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <div class="chart-title">🍰 Category Distribution</div>
+            <div class="chart-wrapper">
+                <canvas id="categoryChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <div class="chart-title">⏰ Hourly Activity Patterns</div>
+            <div class="chart-wrapper">
+                <canvas id="hourlyChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Trending Questions and Category Performance -->
+        <div class="category-performance">
+            <div class="trending-questions">
+                <div class="trending-header">🔥 Trending Questions</div>
+                {% for question in trending_questions %}
+                <div class="trending-item">
+                    <div class="trending-question">
+                        <strong>{{ question.option_a }} vs {{ question.option_b }}</strong>
+                        <br><small>{{ question.category.name }}</small>
+                    </div>
+                    <div class="trending-votes">{{ question.total_votes }} votes</div>
+                </div>
+                {% endfor %}
+            </div>
+
+            {% for category in category_stats %}
+            <div class="performance-card">
+                <div class="performance-header" style="background: linear-gradient(135deg, #{{ category.color }}, #{{ category.color_dark }});">
+                    {{ category.icon }} {{ category.name }}
+                </div>
+                <div class="performance-body">
+                    <div class="performance-stat">
+                        <span>Questions</span>
+                        <span>{{ category.question_count }}</span>
+                    </div>
+                    <div class="performance-stat">
+                        <span>Total Votes</span>
+                        <span>{{ category.total_votes }}</span>
+                    </div>
+                    <div class="performance-stat">
+                        <span>Avg. per Question</span>
+                        <span>{{ category.avg_votes }}</span>
+                    </div>
+                    <div class="performance-stat">
+                        <span>Engagement Rate</span>
+                        <span>{{ category.engagement_rate }}%</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script>
+        // Sample data - replace with actual data from Django context
+        const activityData = {{ activity_data|safe }};
+        const categoryData = {{ category_data|safe }};
+        const hourlyData = {{ hourly_data|safe }};
+
+        // Activity Chart
+        const activityCtx = document.getElementById('activityChart').getContext('2d');
+        const activityChart = new Chart(activityCtx, {
+            type: 'line',
+            data: {
+                labels: activityData.labels,
+                datasets: [{
+                    label: 'Votes',
+                    data: activityData.votes,
+                    borderColor: '#667eea',
+                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0,0,0,0.1)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+
+        // Category Chart
+        const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+        const categoryChart = new Chart(categoryCtx, {
+            type: 'doughnut',
+            data: {
+                labels: categoryData.labels,
+                datasets: [{
+                    data: categoryData.votes,
+                    backgroundColor: [
+                        '#ff6b6b',
+                        '#4834d4',
+                        '#00d2ff',
+                        '#ff9ff3',
+                        '#54a0ff',
+                        '#5f27cd',
+                        '#00d8d6',
+                        '#ff3838'
+                    ],
+                    borderWidth: 3,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            padding: 20,
+                            usePointStyle: true
+                        }
+                    }
+                }
+            }
+        });
+
+        // Hourly Chart
+        const hourlyCtx = document.getElementById('hourlyChart').getContext('2d');
+        const hourlyChart = new Chart(hourlyCtx, {
+            type: 'bar',
+            data: {
+                labels: hourlyData.labels,
+                datasets: [{
+                    label: 'Votes by Hour',
+                    data: hourlyData.votes,
+                    backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                    borderColor: '#667eea',
+                    borderWidth: 2,
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0,0,0,0.1)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+
+        function updateCharts() {
+            const timePeriod = document.getElementById('timePeriod').value;
+            const category = document.getElementById('category').value;
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            // Send AJAX request to update charts
+            fetch('/polls/analytics/update/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    time_period: timePeriod,
+                    category: category,
+                    start_date: startDate,
+                    end_date: endDate
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Update charts with new data
+                activityChart.data.labels = data.activity_data.labels;
+                activityChart.data.datasets[0].data = data.activity_data.votes;
+                activityChart.update();
+
+                categoryChart.data.labels = data.category_data.labels;
+                categoryChart.data.datasets[0].data = data.category_data.votes;
+                categoryChart.update();
+
+                hourlyChart.data.datasets[0].data = data.hourly_data.votes;
+                hourlyChart.update();
+            });
+        }
+
+        function exportData() {
+            const timePeriod = document.getElementById('timePeriod').value;
+            const category = document.getElementById('category').value;
+            
+            window.location.href = `/polls/analytics/export/?period=${timePeriod}&category=${category}`;
+        }
+
+        // Set default date range to last 30 days
+        const today = new Date();
+        const thirtyDaysAgo = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000));
+        
+        document.getElementById('endDate').value = today.toISOString().split('T')[0];
+        document.getElementById('startDate').value = thirtyDaysAgo.toISOString().split('T')[0];
+
+        // Auto-refresh every 30 seconds
+        setInterval(updateCharts, 30000);
+    </script>
+</body>
+</html>
